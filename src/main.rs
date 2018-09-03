@@ -1,6 +1,8 @@
 extern crate bitcoin;
 extern crate hex;
 extern crate secp256k1;
+#[macro_use]
+extern crate clap;
 
 extern crate pretty_env_logger;
 #[macro_use]
@@ -21,6 +23,8 @@ use std::result::Result;
 use std::str::FromStr;
 use std::vec::Vec;
 
+use clap::{App, Arg, SubCommand};
+
 /*
 //===PASTE THIS INTO C++ CODE====
 const string sgxPrivKey = "cURgah32X7tNqK9NCkpXVVd4bbocWm3UjgwyAGpdVfxicAZynLs5";
@@ -39,6 +43,63 @@ const P2SH_TO_BE_SPENT: &'static str = "02000000000102790920e76779cc4c4ca0da231d
 const CLTV_TIMEOUT: u32 = 1523468912;
 
 fn main() {
+    let app_matches = App::new("p2sh example")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .subcommand(
+            SubCommand::with_name("create")
+                .about("create a P2SH address with CLTV")
+                .arg(
+                    Arg::with_name("seckey")
+                        .short("s")
+                        .long("secret")
+                        .takes_value(true)
+                        .value_name("SECRET KEY")
+                        .help("the private key used to spend a CLTV"),
+                ).arg(
+                    Arg::with_name("locktime")
+                        .short("l")
+                        .long("locktime")
+                        .value_name("LOCKTIME")
+                        .help("locktime")
+                        .takes_value(true),
+                ),
+        ).subcommand(
+            SubCommand::with_name("spend")
+                .about("spend a time-locked output")
+                .arg(
+                    Arg::with_name("seckey")
+                        .short("s")
+                        .long("secret")
+                        .takes_value(true)
+                        .value_name("SECRET KEY")
+                        .help("the private key used to spend a CLTV"),
+                ).arg(
+                    Arg::with_name("locktime")
+                        .short("l")
+                        .long("locktime")
+                        .value_name("LOCKTIME")
+                        .help("locktime")
+                        .takes_value(true),
+                ),
+        ).get_matches();
+
+    match app_matches.subcommand() {
+        ("create", Some(matches)) => {
+            println!("create");
+            return;
+        }
+        ("spend", Some(matches)) => {
+            println!("spend");
+            return;
+        }
+        _ => {
+            println!("{}", app_matches.usage());
+            return;
+        }
+    }
+
     // setup logger
     pretty_env_logger::init();
 
@@ -142,8 +203,7 @@ fn spend_p2sh_utxo_to_p2pkh_address(
             script_sig: Script::new(),
             sequence: 0xFFFFFFFF,
             witness: vec![],
-        })
-        .collect();
+        }).collect();
 
     // build an unsigned tx
     let unsigned_transaction = Transaction {
@@ -160,13 +220,14 @@ fn spend_p2sh_utxo_to_p2pkh_address(
     for i in 0..unsigned_transaction.input.len() {
         let utxo = redeems[i].utxo;
         let hash = unsigned_transaction.signature_hash(i, &utxo.script_pubkey, 0x1);
-        let sig: Vec<u8> = secp.sign(
-            &match secp256k1::Message::from_slice(hash.as_bytes()) {
-                Ok(m) => m,
-                Err(_) => return Err("sign".to_string()),
-            },
-            private_key.secret_key(),
-        ).serialize_der(&secp);
+        let sig: Vec<u8> = secp
+            .sign(
+                &match secp256k1::Message::from_slice(hash.as_bytes()) {
+                    Ok(m) => m,
+                    Err(_) => return Err("sign".to_string()),
+                },
+                private_key.secret_key(),
+            ).serialize_der(&secp);
 
         debug!("signature is {}", hex::encode(&sig));
 

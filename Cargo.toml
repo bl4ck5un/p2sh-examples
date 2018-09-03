@@ -3,9 +3,14 @@ name = "big-transactions"
 version = "0.1.0"
 authors = ["Fan Zhang <bl4ck5unxx@gmail.com>"]
 
+[[bin]]
+name = "cltv"
+path = "src/main.rs"
+
 [dependencies]
 bitcoin = "0.14.1"
 secp256k1 = "0.11.0"
 hex = "0.3.2"
 log = "0.4"
 pretty_env_logger = "0.2"
+clap = "2.32.0"
