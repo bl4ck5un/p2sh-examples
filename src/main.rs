@@ -94,7 +94,7 @@ fn create_cltv_address(cltv: u32, public_key: &PublicKey, network: Network) -> A
     Address::p2sh(&redeem_script, network)
 }
 
-//! script: can be spend by public_key after cltv
+/// script: can be spend by public_key after cltv
 fn generate_cltv_script(cltv: u32, public_key: &PublicKey) -> Script {
     Builder::new()
         .push_int(cltv as i64)
