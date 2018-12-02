@@ -56,8 +56,7 @@ fn main() {
                 .possible_values(&["test", "regtest", "main"])
                 .default_value("regtest")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("seckey")
                 .required(true)
                 .short("s")
@@ -65,8 +64,7 @@ fn main() {
                 .takes_value(true)
                 .value_name("SECRET_KEY")
                 .help("the private key used to spend a CLTV"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("locktime")
                 .required(true)
                 .short("l")
@@ -74,18 +72,22 @@ fn main() {
                 .value_name("LOCKTIME")
                 .help("locktime")
                 .takes_value(true),
-        )
-        .subcommand(SubCommand::with_name("create").about("create a P2SH address with CLTV"))
+        ).subcommand(SubCommand::with_name("create").about("create a P2SH address with CLTV"))
         .subcommand(
             SubCommand::with_name("spend")
                 .about("spend a time-locked output")
                 .args(&[
-                    Arg::with_name("transaction_hex").long("tx").required(true).takes_value(true),
+                    Arg::with_name("transaction_hex")
+                        .long("tx")
+                        .required(true)
+                        .takes_value(true),
                     Arg::with_name("vout").long("vout").default_value("0"),
-                    Arg::with_name("target").long("address").required(true).takes_value(true),
+                    Arg::with_name("target")
+                        .long("address")
+                        .required(true)
+                        .takes_value(true),
                 ]),
-        )
-        .get_matches();
+        ).get_matches();
 
     let locktime = value_t!(app_matches.value_of("locktime"), u32).expect("locktime arg");
     let secret_key = Privkey::from_str(
@@ -126,7 +128,7 @@ fn main() {
                 Err(e) => {
                     error!("{}", e);
                     return;
-                },
+                }
             };
 
             let address = match Address::from_str(matches.value_of("target").expect("target arg")) {
@@ -134,7 +136,7 @@ fn main() {
                 Err(e) => {
                     error!("can't get address: {}", e);
                     return;
-                },
+                }
             };
 
             let secp = secp256k1::Secp256k1::new();
@@ -151,9 +153,8 @@ fn main() {
                 redeem_script: &redeem_script,
             };
 
-
             let tx_output = TxOut {
-                value: redeem.utxo.value -10000000, // FIXME: a fixed fee is used
+                value: redeem.utxo.value - 10000000, // FIXME: a fixed fee is used
                 script_pubkey: address.script_pubkey(),
             };
 
@@ -181,18 +182,15 @@ fn main() {
         }
     }
 
-//    let tx_to_be_spent =
-//        deserialize::<Transaction>(hex::decode(P2SH_TO_BE_SPENT).unwrap().as_slice()).unwrap();
-//
-//    debug!("tx to be spent {:?}", tx_to_be_spent);
-//
+    //    let tx_to_be_spent =
+    //        deserialize::<Transaction>(hex::decode(P2SH_TO_BE_SPENT).unwrap().as_slice()).unwrap();
+    //
+    //    debug!("tx to be spent {:?}", tx_to_be_spent);
+    //
 
-
-//     spend to a simple p2ph
-//    let to_address = Address::p2pkh(&sgx_public_key, Network::Regtest);
-//    debug!("target P2PKH address {}", to_address);
-
-
+    //     spend to a simple p2ph
+    //    let to_address = Address::p2pkh(&sgx_public_key, Network::Regtest);
+    //    debug!("target P2PKH address {}", to_address);
 }
 
 fn create_cltv_address(cltv: u32, public_key: &PublicKey, network: Network) -> Address {
@@ -248,8 +246,7 @@ fn spend_p2sh_utxo_to_p2pkh_address(
             script_sig: Script::new(),
             sequence: 0, // FIXME: set to 0xFFFFFFFF will disable cause CLV to fail (https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki/)
             witness: vec![],
-        })
-        .collect();
+        }).collect();
 
     // build an unsigned tx
     let unsigned_transaction = Transaction {
@@ -266,8 +263,8 @@ fn spend_p2sh_utxo_to_p2pkh_address(
     for i in 0..unsigned_transaction.input.len() {
         // see https://bitcoin.stackexchange.com/questions/66197/step-by-step-example-to-redeem-a-p2sh-output-required
         let hash = unsigned_transaction.signature_hash(i, redeems[i].redeem_script, 0x1);
-        let sig =
-            secp.sign(
+        let sig = secp
+            .sign(
                 &match secp256k1::Message::from_slice(hash.as_bytes()) {
                     Ok(m) => m,
                     Err(_) => return Err("sign".to_string()),
@@ -292,7 +289,11 @@ fn spend_p2sh_utxo_to_p2pkh_address(
             .push_slice(redeems[i].redeem_script.as_bytes())
             .into_script();
 
-        debug!("script sig {} which is {:?}", hex::encode(&script_sig.as_bytes()), &script_sig);
+        debug!(
+            "script sig {} which is {:?}",
+            hex::encode(&script_sig.as_bytes()),
+            &script_sig
+        );
         final_tx.input[i].script_sig = script_sig;
     }
 
