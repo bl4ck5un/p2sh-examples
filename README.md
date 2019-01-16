@@ -1,12 +1,16 @@
-Constructing P2SH transactions in Rust
-======================================
+# Constructing P2SH transactions in Rust
 
-# The example of CheckLocktimeVerify
+This repo contains educational (hopefully) examples for handcrafting pay-to-script-hash transactions in Rust.
 
+## A simple one: hodl coins using CheckLocktimeVerify
 
-## Usage
+`cltv.rs` is inspired by Peter Todd's CLTV demo (see a [fork of mine](https://github.com/bl4ck5un/checklocktimeverify-demos)).
+`cltv` has two subcommands: `create` and `spend`. The former generates a `P2SH`
+address such that coins sent to it can be spent by the specified secret key
+after the specified timeout (an absolute unix epoch).
 
-`cltv.rs` implements the same functionality as Peter Todd's [CLTV-demo](https://github.com/bl4ck5un/checklocktimeverify-demos). `cltv` has two subcommands: `create` and `spend`. The former generates a `P2SH` address such that coins sent to it can be spent by the specified secret key after the specified timeout (an absolute unix epoch).
+### Usage
+
 
 ```
 USAGE:
@@ -35,18 +39,7 @@ OPTIONS:
 
 See `cltv --help` for the usage info.
 
-## Example
+## Tips
 
-Reference output:
-
-```
-> python3 hodl.py -vt cURgah32X7tNqK9NCkpXVVd4bbocWm3UjgwyAGpdVfxicAZynLs5 1547501293 create
-> 2MxuEFzoSmvZSzaUm4LgrNSXUauwYCq1ntQ
-```
-
-One can verify that `cltv` outputs the same address:
-
-```
-> ./target/debug/cltv --locktime 1547501293 --secret cURgah32X7tNqK9NCkpXVVd4bbocWm3UjgwyAGpdVfxicAZynLs5 create
-> 2MxuEFzoSmvZSzaUm4LgrNSXUauwYCq1ntQ
-```
+- Use the attached config file to create a regtest for fast testing.
+- Make sure the P2SH UTXO is confirmed before trying to spend it. Otherwise you might a `non-final` error, even the timelock has expired.
